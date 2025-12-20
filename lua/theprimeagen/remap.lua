@@ -31,7 +31,44 @@ vim.keymap.set("i", "<C-c>", "<Esc>")
 vim.keymap.set("n", "Q", "<nop>")
 vim.keymap.set("n", "<C-f>", "<cmd>silent !tmux neww tmux-sessionizer<CR>")
 vim.keymap.set("n", "<leader>f", vim.lsp.buf.format)
-vim.keymap.set("n", "<leader>fn", function() vim.fn.setreg("+", vim.fn.expand("%:p")) end)
+vim.keymap.set("n", "<leader>fn", function() 
+    local file_path = vim.fn.expand("%:p")
+    vim.fn.setreg("+", file_path)
+    print("Copied: " .. file_path)
+end)
+
+vim.keymap.set("n", "<leader>i", function()
+  local target_buf = vim.api.nvim_get_current_buf()
+  local target_win = vim.api.nvim_get_current_win()
+  local word = vim.fn.expand("<cword>")
+
+  -- Use telescope since snacks.picker doesn't exist
+  require('telescope.builtin').live_grep({
+    default_text = "use.*\\b" .. word .. "\\b",
+    attach_mappings = function(prompt_bufnr, map)
+      map('i', '<CR>', function()
+        local entry = require('telescope.actions.state').get_selected_entry()
+        require('telescope.actions').close(prompt_bufnr)
+        if not entry then
+          return
+        end
+
+        -- Get the line content
+        local content = entry.text or ""
+
+        -- Switch back to the target buffer/window
+        vim.api.nvim_set_current_win(target_win)
+        vim.api.nvim_set_current_buf(target_buf)
+
+        -- Prepend use statement to file
+        vim.api.nvim_buf_set_lines(target_buf, 0, 0, false, { content })
+      end)
+      return true
+    end,
+  })
+end, { desc = "Search and paste use statements" })
+
+vim.keymap.set({"n", "v"}, "<leader>c", "gc", { remap = true, desc = "Toggle comment" })
 
 vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
 vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
@@ -50,5 +87,7 @@ vim.keymap.set(
 vim.keymap.set("n", "<leader>vpp", "<cmd>e ~/.dotfiles/nvim/.config/nvim/lua/theprimeagen/packer.lua<CR>");
 vim.keymap.set("n", "<leader>mr", "<cmd>CellularAutomaton make_it_rain<CR>");
 
+-- Rebind gd to use telescope for better go-to-definition
+vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>")
 
 vim.api.nvim_set_option("clipboard","unnamed")
