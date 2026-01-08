@@ -59,8 +59,9 @@ return {
                         capabilities = capabilities,
                         settings = {
                             ["rust-analyzer"] = {
-                                -- Enable cargo diagnostics so Rust errors show up in-editor (otherwise you may see
-                                -- very few/no diagnostics unless rust-analyzer can infer them without running cargo).
+                                -- NOTE: Running `cargo check` on save can be expensive in large workspaces (CPU + disk),
+                                -- so we keep it disabled. Tradeoff: fewer/less accurate diagnostics in-editor.
+                                checkOnSave = false,
                                 diagnostics = {
                                     enable = true,
                                     enableExperimental = false,
