@@ -40,12 +40,20 @@ return {
             builtin.grep_string({ search = word })
         end)
         vim.keymap.set('n', '<leader>ps', function()
-            builtin.grep_string({ search = vim.fn.input("Grep > ") })
+            local q = vim.fn.input("Grep > ")
+            if q == nil or q == "" then
+                return
+            end
+            builtin.grep_string({ search = q })
         end)
         vim.keymap.set('n', '<leader>pd', function()
             local current_file_dir = vim.fn.expand("%:p:h")
+            local dir = vim.fn.input("Directory: ", current_file_dir .. "/", "dir")
+            if dir == nil or dir == "" then
+                return
+            end
             builtin.live_grep({
-                search_dirs = { vim.fn.input("Directory: ", current_file_dir .. "/", "dir") }
+                search_dirs = { dir }
             })
         end)
         vim.keymap.set('n', '<leader>vh', builtin.help_tags, {})
