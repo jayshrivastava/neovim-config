@@ -30,84 +30,74 @@ return {
                 "rust_analyzer",
                 "gopls",
             },
-            handlers = {
-                function(server_name) -- default handler (optional)
-                    require("lspconfig")[server_name].setup {
-                        capabilities = capabilities
-                    }
-                end,
-
-                zls = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.zls.setup({
-                        root_dir = lspconfig.util.root_pattern(".git", "build.zig", "zls.json"),
-                        settings = {
-                            zls = {
-                                enable_inlay_hints = true,
-                                enable_snippets = true,
-                                warn_style = true,
-                            },
-                        },
-                    })
-                    vim.g.zig_fmt_parse_errors = 0
-                    vim.g.zig_fmt_autosave = 0
-
-                end,
-                ["rust_analyzer"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.rust_analyzer.setup {
-                        capabilities = capabilities,
-                        settings = {
-                            ["rust-analyzer"] = {
-                                -- Enable cargo diagnostics so Rust errors show up in-editor (otherwise you may see
-                                -- very few/no diagnostics unless rust-analyzer can infer them without running cargo).
-                                diagnostics = {
-                                    enable = true,
-                                    enableExperimental = false,
-                                    -- rust-analyzer proc-macro noise / warnings (see:
-                                    -- https://users.rust-lang.org/t/how-to-disable-rust-analyzer-proc-macro-warnings-in-neovim/53150)
-                                    --
-                                    -- - unresolved-proc-macro: "proc macro not expanded" style warnings
-                                    -- - proc-macro-disabled: "proc-macro is explicitly disabled" (e.g. when we ignore tokio-macros below)
-                                    disabled = {"E0133", "unresolved-proc-macro", "proc-macro-disabled"} -- Disable false unsafe code warnings + proc-macro noise
-                                },
-                                procMacro = {
-                                    enable = true,
-                                    ignored = {
-                                        -- rust-analyzer + #[tokio::test]/#[tokio::main] can sometimes send "go to definition"
-                                        -- into macro-expanded tokio internals (e.g. runtime builder) instead of your symbol.
-                                        -- Ignoring these tokio attribute macros keeps proc-macro support for things like
-                                        -- async_trait while making navigation more reliable in tokio tests.
-                                        ["tokio-macros"] = { "test", "main" },
-                                    },
-                                },
-                                cargo = {
-                                    buildScripts = {
-                                        enable = true -- Enable build scripts
-                                    },
-                                    loadOutDirsFromCheck = true,
-                                    features = "all" -- Enable all features
-                                }
-                            }
-                        }
-                    }
-                end,
-                ["lua_ls"] = function()
-                    local lspconfig = require("lspconfig")
-                    lspconfig.lua_ls.setup {
-                        capabilities = capabilities,
-                        settings = {
-                            Lua = {
-                                runtime = { version = "Lua 5.1" },
-                                diagnostics = {
-                                    globals = { "bit", "vim", "it", "describe", "before_each", "after_each" },
-                                }
-                            }
-                        }
-                    }
-                end,
-            }
         })
+
+        -- Default capabilities for all servers (Neovim 0.11+ native API)
+        vim.lsp.config('*', {
+            capabilities = capabilities,
+        })
+
+        vim.lsp.config.rust_analyzer = {
+            settings = {
+                ["rust-analyzer"] = {
+                    -- Enable cargo diagnostics so Rust errors show up in-editor (otherwise you may see
+                    -- very few/no diagnostics unless rust-analyzer can infer them without running cargo).
+                    diagnostics = {
+                        enable = true,
+                        enableExperimental = false,
+                        -- rust-analyzer proc-macro noise / warnings (see:
+                        -- https://users.rust-lang.org/t/how-to-disable-rust-analyzer-proc-macro-warnings-in-neovim/53150)
+                        --
+                        -- - unresolved-proc-macro: "proc macro not expanded" style warnings
+                        -- - proc-macro-disabled: "proc-macro is explicitly disabled" (e.g. when we ignore tokio-macros below)
+                        disabled = {"E0133", "unresolved-proc-macro", "proc-macro-disabled"} -- Disable false unsafe code warnings + proc-macro noise
+                    },
+                    procMacro = {
+                        enable = true,
+                        ignored = {
+                            -- rust-analyzer + #[tokio::test]/#[tokio::main] can sometimes send "go to definition"
+                            -- into macro-expanded tokio internals (e.g. runtime builder) instead of your symbol.
+                            -- Ignoring these tokio attribute macros keeps proc-macro support for things like
+                            -- async_trait while making navigation more reliable in tokio tests.
+                            ["tokio-macros"] = { "test", "main" },
+                        },
+                    },
+                    cargo = {
+                        buildScripts = {
+                            enable = true -- Enable build scripts
+                        },
+                        loadOutDirsFromCheck = true,
+                        features = "all" -- Enable all features
+                    }
+                }
+            }
+        }
+
+        vim.lsp.config.lua_ls = {
+            settings = {
+                Lua = {
+                    runtime = { version = "Lua 5.1" },
+                    diagnostics = {
+                        globals = { "bit", "vim", "it", "describe", "before_each", "after_each" },
+                    }
+                }
+            }
+        }
+
+        vim.lsp.config.zls = {
+            root_markers = { ".git", "build.zig", "zls.json" },
+            settings = {
+                zls = {
+                    enable_inlay_hints = true,
+                    enable_snippets = true,
+                    warn_style = true,
+                },
+            },
+        }
+        vim.g.zig_fmt_parse_errors = 0
+        vim.g.zig_fmt_autosave = 0
+
+        vim.lsp.enable({ "rust_analyzer", "lua_ls", "gopls", "zls" })
 
         local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
