@@ -62,6 +62,10 @@ return {
                             ["tokio-macros"] = { "test", "main" },
                         },
                     },
+                    check = {
+                        enable = false -- Disable cargo check on save
+                    },
+                    checkOnSave = false,
                     cargo = {
                         buildScripts = {
                             enable = true -- Enable build scripts
