@@ -39,13 +39,7 @@ return {
             local word = vim.fn.expand("<cWORD>")
             builtin.grep_string({ search = word })
         end)
-        vim.keymap.set('n', '<leader>ps', function()
-            local q = vim.fn.input("Grep > ")
-            if q == nil or q == "" then
-                return
-            end
-            builtin.grep_string({ search = q })
-        end)
+        vim.keymap.set('n', '<leader>ps', builtin.live_grep, {})
         vim.keymap.set('n', '<leader>pd', function()
             local current_file_dir = vim.fn.expand("%:p:h")
             local dir = vim.fn.input("Directory: ", current_file_dir .. "/", "dir")

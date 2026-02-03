@@ -14,6 +14,16 @@ return {
     },
 
     config = function()
+        -- Filter stale completion errors to log instead of popup
+        local original_notify = vim.notify
+        vim.notify = function(msg, level, opts)
+            if type(msg) == "string" and (msg:find("stale") or msg:find("completion request failed")) then
+                vim.lsp.log.warn(msg)
+                return
+            end
+            return original_notify(msg, level, opts)
+        end
+
         local cmp = require('cmp')
         local cmp_lsp = require("cmp_nvim_lsp")
         local capabilities = vim.tbl_deep_extend(
